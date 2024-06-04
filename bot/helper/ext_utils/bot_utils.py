@@ -88,6 +88,7 @@ class MirrorStatus:
     STATUS_SPLITTING = "Splitting"
     STATUS_CHECKING = "CheckUp"
     STATUS_SEEDING = "Seeding"
+    STATUS_PROCESSING = "Processing"
 
 
 class setInterval:
@@ -105,14 +106,22 @@ class setInterval:
         self.task.cancel()
 
 
-def get_readable_file_size(size_in_bytes):
+def isMkv(file):
+    return file.lower().endswith('mkv')
+
+
+def get_readable_file_size(size_in_bytes: int):
     if size_in_bytes is None:
-        return '0B'
+        return "0B"
     index = 0
     while size_in_bytes >= 1024 and index < len(SIZE_UNITS) - 1:
         size_in_bytes /= 1024
         index += 1
-    return f'{size_in_bytes:.2f}{SIZE_UNITS[index]}' if index > 0 else f'{size_in_bytes}B'
+    return (
+        f"{size_in_bytes:.2f}{SIZE_UNITS[index]}"
+        if index > 0
+        else f"{size_in_bytes:.2f}B"
+    )
 
 
 async def getDownloadByGid(gid):
@@ -205,7 +214,7 @@ def get_readable_message():
     for download in list(download_dict.values())[STATUS_START:STATUS_LIMIT+STATUS_START]:
         msg += f"<b>{download.status()}:</b> {escape(f'{download.name()}')}\n"
         msg += f"by {source(download)}\n"
-        if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
+        if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING, MirrorStatus.STATUS_PROCESSING]:
             msg += f"<blockquote><code>{progress_bar(download.progress())}</code> {download.progress()}"
             msg += f"\n{download.processed_bytes()} of {download.size()}"
             msg += f"\nSpeed: {download.speed()}"
@@ -216,13 +225,13 @@ def get_readable_message():
                 except:
                     pass
         elif download.status() == MirrorStatus.STATUS_SEEDING:
-            msg += f"<blockquote>\nSize: {download.size()}"
+            msg += f"<blockquote>Size: {download.size()}"
             msg += f"\nSpeed: {download.upload_speed()}"
             msg += f"\nUploaded: {download.uploaded_bytes()}"
             msg += f"\nRatio: {download.ratio()}"
             msg += f"\nTime: {download.seeding_time()}"
         else:
-            msg += f"<blockquote>\nSize: {download.size()}"
+            msg += f"<blockquote>Size: {download.size()}"
         msg += f"\nElapsed: {get_readable_time(time() - download.message.date.timestamp())}</blockquote>"
         msg += f"\n<blockquote>/stop_{download.gid()[:8]}</blockquote>\n\n"
     if len(msg) == 0:
@@ -230,13 +239,13 @@ def get_readable_message():
     dl_speed = 0
     up_speed = 0
     for download in download_dict.values():
-            tstatus = download.status()
-            if tstatus == MirrorStatus.STATUS_DOWNLOADING:
-                dl_speed += text_to_bytes(download.speed())
-            elif tstatus == MirrorStatus.STATUS_UPLOADING:
-                up_speed += text_to_bytes(download.speed())
-            elif tstatus == MirrorStatus.STATUS_SEEDING:
-                up_speed += text_to_bytes(download.upload_speed())
+        tstatus = download.status()
+        if tstatus == MirrorStatus.STATUS_DOWNLOADING:
+            dl_speed += text_to_bytes(download.speed())
+        elif tstatus == MirrorStatus.STATUS_UPLOADING:
+            up_speed += text_to_bytes(download.speed())
+        elif tstatus == MirrorStatus.STATUS_SEEDING:
+            up_speed += text_to_bytes(download.upload_speed())
     if tasks > STATUS_LIMIT:
         buttons = ButtonMaker()
         buttons.ibutton("Prev", "status pre")
@@ -453,8 +462,6 @@ async def checking_access(user_id, button=None):
         token = data['token'] if expire is None and 'token' in data else str(uuid4())
         if expire is not None:
             del data['time']
-            #if DATABASE_URL:
-             #   await DbManager().delete_user_token(user_id)
         data['token'] = token
         if DATABASE_URL:
             await DbManager().update_user_token(user_id, token)

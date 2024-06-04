@@ -30,38 +30,38 @@ from .helper.telegram_helper.message_utils import sendMessage, editMessage, send
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.button_build import ButtonMaker
 from .helper.listeners.aria2_listener import start_aria2_listener
-from .modules import authorize, cancel_mirror, mirror_leech, status, torrent_search, ytdlp, shell, eval, users_settings, bot_settings, speedtest, images, mediainfo, broadcast
+from .modules import authorize, cancel_mirror, mirror_leech, status, torrent_search, ytdlp, shell, executor, users_settings, torrent_select, bot_settings, speedtest, images, mediainfo, broadcast
 from .helper.mirror_leech_utils.gdrive_utils import count, delete, list, clone
 
 
 if config_dict['GDRIVE_ID']:
     help_string = f'''<b>NOTE: Try each command without any arguments to see more details.</b>
 
-<blockquote>/{BotCommands.MirrorCommand[0]} - Start mirroring to Google Drive.</blockquote>
-<blockquote>/{BotCommands.LeechCommand[0]} - Start leeching to Telegram.</blockquote>
-<blockquote>/{BotCommands.YtdlCommand[0]} - Mirror links supported by yt-dlp.</blockquote>
-<blockquote>/{BotCommands.YtdlLeechCommand[0]} - Leech links supported by yt-dlp.</blockquote>
-<blockquote>/{BotCommands.CloneCommand[0]} - Copy files/folders to Google Drive.</blockquote>
-<blockquote>/{BotCommands.CountCommand} - Count files/folders in Google Drive.</blockquote>
-<blockquote>/{BotCommands.ListCommand} - Search in Google Drive(s).</blockquote>
-<blockquote>/{BotCommands.UserSetCommand} - Open the settings panel.</blockquote>
-<blockquote>/{BotCommands.MediaInfoCommand} - View MediaInfo from a file or link.</blockquote>
-<blockquote>/{BotCommands.StopAllCommand[0]} - Cancel all active tasks.</blockquote>
-<blockquote>/{BotCommands.SearchCommand} - Search for torrents using API or plugins.</blockquote>
-<blockquote>/{BotCommands.StatusCommand[0]} - Show the status of all downloads.</blockquote>
-<blockquote>/{BotCommands.StatsCommand[0]} - Display machine stats hosting the bot.</blockquote>
+<blockquote expandable>/{BotCommands.MirrorCommand[0]} - Start mirroring to Google Drive.
+/{BotCommands.LeechCommand[0]} - Start leeching to Telegram.
+/{BotCommands.YtdlCommand[0]} - Mirror links supported by yt-dlp.
+/{BotCommands.YtdlLeechCommand[0]} - Leech links supported by yt-dlp.
+/{BotCommands.CloneCommand[0]} - Copy files/folders to Google Drive.
+/{BotCommands.CountCommand} - Count files/folders in Google Drive.
+/{BotCommands.ListCommand} - Search in Google Drive(s).
+/{BotCommands.UserSetCommand} - Open the settings panel.
+/{BotCommands.MediaInfoCommand} - View MediaInfo from a file or link.
+/{BotCommands.StopAllCommand[0]} - Cancel all active tasks.
+/{BotCommands.SearchCommand} - Search for torrents using API or plugins.
+/{BotCommands.StatusCommand[0]} - Show the status of all downloads.
+/{BotCommands.StatsCommand[0]} - Display machine stats hosting the bot.</blockquote>
 '''
 else:
     help_string = f'''<b>NOTE: Try each command without any arguments to see more details.</b>
 
-<blockquote>/{BotCommands.LeechCommand[0]} - Start leeching to Telegram.</blockquote>
-<blockquote>/{BotCommands.YtdlLeechCommand[0]} - Leech links supported by yt-dlp.</blockquote>
-<blockquote>/{BotCommands.UserSetCommand} - Open the settings panel.</blockquote>
-<blockquote>/{BotCommands.MediaInfoCommand} - View MediaInfo from a file or link.</blockquote>
-<blockquote>/{BotCommands.StopAllCommand[0]} - Cancel all active tasks.</blockquote>
-<blockquote>/{BotCommands.SearchCommand} - Search for torrents using API or plugins.</blockquote>
-<blockquote>/{BotCommands.StatusCommand[0]} - Show the status of all downloads.</blockquote>
-<blockquote>/{BotCommands.StatsCommand[0]} - Display machine stats hosting the bot.</blockquote>
+<blockquote expandable>/{BotCommands.LeechCommand[0]} - Start leeching to Telegram.
+/{BotCommands.YtdlLeechCommand[0]} - Leech links supported by yt-dlp.
+/{BotCommands.UserSetCommand} - Open the settings panel.
+/{BotCommands.MediaInfoCommand} - View MediaInfo from a file or link.
+/{BotCommands.StopAllCommand[0]} - Cancel all active tasks.
+/{BotCommands.SearchCommand} - Search for torrents using API or plugins.
+/{BotCommands.StatusCommand[0]} - Show the status of all downloads.
+/{BotCommands.StatsCommand[0]} - Display machine stats hosting the bot.</blockquote>
 '''
 
 
@@ -154,7 +154,7 @@ async def restart(client, message):
         if interval:
             interval[0].cancel()
     await sync_to_async(clean_all)
-    proc1 = await create_subprocess_exec('pkill', '-9', '-f', '-e', 'gunicorn|buffet|openstack|render|zcl')
+    proc1 = await create_subprocess_exec('pkill', '-9', '-f', '-e', 'gunicorn|xria|xnox|xtra|xone')
     proc2 = await create_subprocess_exec('python3', 'update.py')
     await gather(proc1.wait(), proc2.wait())
     async with aiopen(".restartmsg", "w") as f:
